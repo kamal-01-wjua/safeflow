@@ -303,5 +303,5 @@ safeflow/
 
 ## Author
 
-Kamal — Data Engineering Portfolio Project
+Mohamed Kamal Mohamed — Data Engineering Portfolio Project
 GitHub: [kamal-01-wjua](https://github.com/kamal-01-wjua)
