@@ -1,4 +1,4 @@
-# SafeFlow 3.0
+# SafeFlow 
 
 
 **Hybrid streaming + batch data pipeline for financial transaction risk scoring.**
