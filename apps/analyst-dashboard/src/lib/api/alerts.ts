@@ -60,13 +60,28 @@ export type AlertDetailResponse = {
   rule_results: RuleResult[]
 }
 
-// Your PowerShell output shows { value: [...], Count: N }.
-// Some environments might return a raw array. Support both safely.
+// Handles all possible API response shapes:
+// 1. { items: [...], count: N }  ← FastAPI paginated response (primary)
+// 2. [...] ← raw array
+// 3. { value: [...], Count: N } ← PowerShell ConvertTo-Json artifact
 function normalizeListResponse(input: any): { items: AlertListItem[]; count?: number } {
-  if (Array.isArray(input)) return { items: input as AlertListItem[], count: input.length }
+  // Primary format: { items: [...], count: N }
+  if (input && Array.isArray(input.items)) {
+    return {
+      items: input.items as AlertListItem[],
+      count: typeof input.count === "number" ? input.count : undefined,
+    }
+  }
+  // Raw array
+  if (Array.isArray(input)) {
+    return { items: input as AlertListItem[], count: input.length }
+  }
+  // PowerShell artifact: { value: [...], Count: N }
   if (input && Array.isArray(input.value)) {
-    const count = typeof input.Count === "number" ? input.Count : undefined
-    return { items: input.value as AlertListItem[], count }
+    return {
+      items: input.value as AlertListItem[],
+      count: typeof input.Count === "number" ? input.Count : undefined,
+    }
   }
   return { items: [], count: undefined }
 }
@@ -82,11 +97,10 @@ export async function getAlerts(params: {
   offset?: number
 }): Promise<{ items: AlertListItem[]; count?: number }> {
   const sp = new URLSearchParams()
-  if (typeof params.min_risk === "number") sp.set("min_risk", String(params.min_risk))
+  if (typeof params.min_risk === "number" && params.min_risk > 0) sp.set("min_risk", String(params.min_risk))
   if (params.severity && params.severity !== "ALL") sp.set("severity", params.severity)
   if (typeof params.limit === "number") sp.set("limit", String(params.limit))
   if (typeof params.offset === "number") sp.set("offset", String(params.offset))
-
   const data = await fetchJson<any>(`/api/v1/alerts?${sp.toString()}`)
   return normalizeListResponse(data)
 }
