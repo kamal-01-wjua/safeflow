@@ -1,0 +1,114 @@
+networks:
+  safeflow-net:
+    driver: bridge
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: safeflow-postgres
+    environment:
+      POSTGRES_DB: safeflow
+      POSTGRES_USER: safeflow
+      POSTGRES_PASSWORD: safeflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - safeflow-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U safeflow -d safeflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7
+    container_name: safeflow-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - safeflow-net
+
+  redpanda:
+    image: docker.redpanda.com/redpandadata/redpanda:latest
+    container_name: safeflow-redpanda
+    command:
+      - redpanda
+      - start
+      - --overprovisioned
+      - --smp
+      - "1"
+      - --memory
+      - 512M
+      - --reserve-memory
+      - 0M
+      - --node-id
+      - "0"
+      - --check=false
+      - --kafka-addr
+      - PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:19092
+      - --advertise-kafka-addr
+      - PLAINTEXT://redpanda:9092,PLAINTEXT_HOST://localhost:19092
+    ports:
+      - "9092:9092"
+      - "19092:19092"
+      - "9644:9644"
+    networks:
+      - safeflow-net
+    healthcheck:
+      test: ["CMD-SHELL", "rpk cluster health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  api:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: safeflow-api
+    env_file:
+      - ./api.env
+    environment:
+      SAFEFLOW_DB_URL: postgresql+psycopg2://safeflow:safeflow@postgres:5432/safeflow
+      DATABASE_URL: postgresql+psycopg2://safeflow:safeflow@postgres:5432/safeflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      redpanda:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    restart: on-failure
+    networks:
+      - safeflow-net
+    volumes:
+      - C:/Users/sinuo/OneDrive/Desktop/safeflow:/app
+
+  risk-worker:
+    build:
+      context: ../..
+      dockerfile: apps/api/Dockerfile
+    container_name: safeflow-risk-worker
+    env_file:
+      - ./api.env
+    environment:
+      SAFEFLOW_DB_URL: postgresql+psycopg2://safeflow:safeflow@postgres:5432/safeflow
+      DATABASE_URL: postgresql+psycopg2://safeflow:safeflow@postgres:5432/safeflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redpanda:
+        condition: service_healthy
+    command: >
+      faust -A apps.streaming.risk_stream_worker.app worker -l info
+    restart: on-failure
+    networks:
+      - safeflow-net
+    volumes:
+      - C:/Users/sinuo/OneDrive/Desktop/safeflow:/app
+
+volumes:
+  postgres_data:
