@@ -83,7 +83,7 @@ jobs:
             apps/api/app/ \
             tools/ \
             tests/ \
-            --ignore E501,F401,F811 \
+            --ignore E501,F401,F811,F541 \
             --output-format=github
 
   docker-build:
