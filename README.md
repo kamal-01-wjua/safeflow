@@ -1,11 +1,30 @@
-# SafeFlow 
-
+# SafeFlow 3.0
 
 **Hybrid streaming + batch data pipeline for financial transaction risk scoring.**
 
 Built as a portfolio project demonstrating production data engineering practices:
 event-driven architecture, feature computation, idempotent persistence, data validation,
 and a JWT-secured FastAPI backend — with a live analyst dashboard.
+
+---
+
+## Screenshots
+
+**Alerts** — KPI cards, severity badges, risk score bars, investigation panel with rule breakdown
+
+![Alerts](docs/screenshots/alerts.safeflow.JPG)
+
+**Transactions** — colored status badges (POSTED/PENDING/REVERSED), direction indicators, detail panel
+
+![Transactions](docs/screenshots/tran.safeflow.JPG)
+
+**Entities** — type icons (Person, Company, Vendor, Employee, Account, Merchant), risk pills, Entity 360 live features
+
+![Entities](docs/screenshots/ent.safeflow.JPG)
+
+**API** — FastAPI auto-generated docs with JWT auth, versioned endpoints
+
+![Swagger](docs/screenshots/swagger.safeflow.JPG)
 
 ---
 
@@ -303,5 +322,5 @@ safeflow/
 
 ## Author
 
-Mohamed Kamal Mohamed — Data Engineering Portfolio Project
+Kamal — Data Engineering Portfolio Project
 GitHub: [kamal-01-wjua](https://github.com/kamal-01-wjua)
