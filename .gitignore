@@ -1,0 +1,9 @@
+```
+apps/api/.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+node_modules/
+.next/
+*.env
